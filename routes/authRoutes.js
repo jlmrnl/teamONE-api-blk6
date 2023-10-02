@@ -79,7 +79,11 @@ function authRoutes(db) {
             expiresIn: '1h'
           });
       
-          res.status(200).json({ message: 'Login successful', token });
+          res.status(200).json({
+            message: 'Login successful',
+            name: user.name, // Include the user's name in the response
+            token
+          });
         });
       });
 
