@@ -4,20 +4,33 @@ const jwt = require('jsonwebtoken');
 const router = express.Router();
 
 function authRoutes(db) {
-    router.get('/', (req, res) => {
+     router.get('/', (req, res) => {
         res.send('Welcome to the authentication API!');
       });
+
+      router.get('/users', (req, res) => {
+        const sql = 'SELECT * FROM tbl_user'; // Assuming your table name is 'users'
+    
+        // Execute the query
+        db.query(sql, (err, results) => {
+            if (err) {
+                // Handle database error
+                console.error('Error fetching users: ' + err.message);
+                return res.status(500).json({ message: 'Error fetching users' });
+            }
+    
+            // Send the users data as a JSON response
+            res.status(200).json(results);
+        });
+    });
+      
       
       router.post('/signup', (req, res) => {
-        const { name, email, password, confirmPassword } = req.body;
+        const { name, email, password } = req.body;
       
         // Validate input
-        if (!name || !email || !password || !confirmPassword) {
+        if (!name || !email || !password) {
           return res.status(400).json({ message: 'All fields are required' });
-        }
-      
-        if (password !== confirmPassword) {
-          return res.status(400).json({ message: 'Passwords do not match' });
         }
       
         // Hash password

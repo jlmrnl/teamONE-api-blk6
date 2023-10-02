@@ -1,11 +1,15 @@
 const express = require('express');
-const bodyParser = require('body-parser');
+const bodyParser = require('body-parser'); // Add this line
 const mysql = require('mysql');
+const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 require('dotenv').config(); // Load environment variables from .env file
 
 const app = express();
+app.use(cors());
 const port = 3000;
+
+app.use(bodyParser.urlencoded({ extended: true })); // Use body-parser middleware for form data
 
 const db = mysql.createConnection({
   host: process.env.MYSQL_HOST,
@@ -24,8 +28,8 @@ db.connect(err => {
 
 app.use(bodyParser.json());
 
-app.use('/', authRoutes(db)); // Pass the db connection object to route handlers
+app.use('/auth', authRoutes(db)); // Pass the db connection object to route handlers
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);
 });
