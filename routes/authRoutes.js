@@ -33,23 +33,45 @@ function authRoutes(db) {
 
   router.post('/signup', (req, res) => {
     const { name, email, password } = req.body;
-
+  
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'All fields are required' });
     }
-
+  
     const hashedPassword = bcrypt.hashSync(password, 10);
-
-    const sql = 'INSERT INTO tbl_user (name, email, password) VALUES (?, ?, ?)';
-    db.query(sql, [name, email, hashedPassword], (err, result) => {
+  
+    // SQL statement to create the table if it doesn't exist
+    const createTableSQL = `
+      CREATE TABLE IF NOT EXISTS tbl_user (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        password VARCHAR(255) NOT NULL
+      )
+    `;
+  
+    // SQL statement to insert user data
+    const insertUserSQL = 'INSERT INTO tbl_user (name, email, password) VALUES (?, ?, ?)';
+  
+    // Create the table if it doesn't exist
+    db.query(createTableSQL, (err) => {
       if (err) {
-        console.error('Error storing user: ' + err.message);
-        return res.status(500).json({ message: 'Error signing up' });
+        console.error('Error creating table: ' + err.message);
+        return res.status(500).json({ message: 'Error creating table' });
       }
-      res.status(201).json({ message: 'User registered successfully' });
-      console.log('A user registered successfully');
+  
+      // Insert user data into the table
+      db.query(insertUserSQL, [name, email, hashedPassword], (err, result) => {
+        if (err) {
+          console.error('Error storing user: ' + err.message);
+          return res.status(500).json({ message: 'Error signing up' });
+        }
+        res.status(201).json({ message: 'User registered successfully' });
+        console.log('A user registered successfully');
+      });
     });
   });
+  
 
   router.post('/signin', (req, res) => {
     const { email, password } = req.body;
