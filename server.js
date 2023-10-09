@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser'); // Add this line
 const mysql = require('mysql');
 const cors = require('cors');
+const os = require('os');
 const authRoutes = require('./routes/authRoutes');
 require('dotenv').config(); // Load environment variables from .env file
 
@@ -30,6 +31,22 @@ app.use(bodyParser.json());
 
 app.use('/auth', authRoutes(db)); // Pass the db connection object to route handlers
 
-app.listen(port, '0.0.0.0', () => {
+const getLocalIpAddress = () => {
+  const networkInterfaces = os.networkInterfaces();
+  for (const interfaceName in networkInterfaces) {
+    const interfaces = networkInterfaces[interfaceName];
+    for (const interface of interfaces) {
+      if (interface.family === 'IPv4' && !interface.internal) {
+        return interface.address;
+      }
+    }
+  }
+  return '127.0.0.1'; // Default to localhost if no valid IP address is found
+};
+
+const localIpAddress = getLocalIpAddress();
+console.log(localIpAddress)
+
+app.listen(port, '0.0.0.0',  localIpAddress, () => {
   console.log(`Server is running on port ${port}`);
 });
