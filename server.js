@@ -41,7 +41,7 @@ const getLocalIpAddress = () => {
       }
     }
   }
-  return '127.0.0.1'; // Default to localhost if no valid IP address is found
+  return '127.0.0.1'; // Default to localhost if no valid IP address is found.
 };
 
 const localIpAddress = getLocalIpAddress();
