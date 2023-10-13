@@ -39,7 +39,7 @@ function authRoutes(db) {
     }
   
     const hashedPassword = bcrypt.hashSync(password, 10);
-  
+
     // SQL statement to create the table if it doesn't exist
     const createTableSQL = `
       CREATE TABLE IF NOT EXISTS tbl_user (
@@ -50,17 +50,25 @@ function authRoutes(db) {
       )
     `;
   
+    // SQL statement to check if the email already exists
+    const checkEmailSQL = 'SELECT * FROM tbl_user WHERE email = ?';
+  
     // SQL statement to insert user data
     const insertUserSQL = 'INSERT INTO tbl_user (name, email, password) VALUES (?, ?, ?)';
   
-    // Create the table if it doesn't exist
-    db.query(createTableSQL, (err) => {
+    // Check if the email already exists
+    db.query(checkEmailSQL, [email], (err, result) => {
       if (err) {
-        console.error('Error creating table: ' + err.message);
-        return res.status(500).json({ message: 'Error creating table' });
+        console.error('Error checking email: ' + err.message);
+        return res.status(500).json({ message: 'Error checking email' });
       }
   
-      // Insert user data into the table
+      // If email exists, return an error response
+      if (result.length > 0) {
+        return res.status(400).json({ message: 'Email already registered' });
+      }
+  
+      // Email doesn't exist, insert user data into the table
       db.query(insertUserSQL, [name, email, hashedPassword], (err, result) => {
         if (err) {
           console.error('Error storing user: ' + err.message);
@@ -71,6 +79,7 @@ function authRoutes(db) {
       });
     });
   });
+  
   
 
   router.post('/signin', (req, res) => {
@@ -100,7 +109,7 @@ function authRoutes(db) {
       req.session.userId = user.id;
 
       const token = jwt.sign({ id: user.id, email: user.email }, 'your_secret_key', {
-        expiresIn: '1h'
+        expiresIn: '12h'
       });
 
       res.status(200).json({
