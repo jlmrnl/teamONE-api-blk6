@@ -4,13 +4,17 @@ const mysql = require('mysql');
 const cors = require('cors');
 const os = require('os');
 const authRoutes = require('./routes/authRoutes');
-require('dotenv').config(); // Load environment variables from .env file
+const postRoutes = require('./routes/postRoutes');
+const path = require('path');
+require('dotenv').config();
 
 const app = express();
 app.use(cors());
 const port = 3000;
 
-app.use(bodyParser.urlencoded({ extended: true })); // Use body-parser middleware for form data
+app.use(bodyParser.urlencoded({ extended: true }));
+
+
 
 const db = mysql.createConnection({
   host: process.env.MYSQL_HOST,
@@ -29,7 +33,9 @@ db.connect(err => {
 
 app.use(bodyParser.json());
 
-app.use('/auth', authRoutes(db)); // Pass the db connection object to route handlers
+app.use('/auth', authRoutes(db));
+app.use('/post', postRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const getLocalIpAddress = () => {
   const networkInterfaces = os.networkInterfaces();
