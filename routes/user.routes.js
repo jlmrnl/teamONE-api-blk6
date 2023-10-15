@@ -2,7 +2,42 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.model"); // Assuming your User model is in the models folder
 const bcrypt = require("bcrypt");
+const cors = require('cors');
 const router = express.Router();
+const multer = require("multer");
+const path = require("path");
+
+const uploadDir = path.join(__dirname, "../uploads");
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const cleanFileName = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
+    cb(null, Date.now() + "-" + cleanFileName);
+  },
+});
+
+
+const upload = multer({ storage: storage });
+
+
+const authenticateToken = (req, res, next) => {
+  const token = req.header("Authorization");
+  console.log("Token:", token); // Log the token to verify it's being sent
+  if (!token) return res.status(401).json({ error: "Unauthorized" });
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      console.error("Error verifying token:", err); // Log any errors during token verification
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    req.user = user;
+    next();
+  });
+};
+
 
 router.post("/signup", async (req, res) => {
   try {
@@ -66,5 +101,56 @@ router.post("/signin", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+// PUT update user profile by token
+router.put("/:token", upload.single("image"), async (req, res) => {
+  const userToken = req.params.token;
+
+  // Verify the token
+  jwt.verify(userToken, process.env.JWT_SECRET, async (err, user) => {
+    if (err) {
+      console.error("Error verifying token:", err);
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    try {
+      const userId = user.userId;
+      const { name, birthdate, password } = req.body;
+      const image = req.file; // Access the uploaded image file
+
+      // Find the user by ID
+      const userToUpdate = await User.findByPk(userId);
+
+      if (!userToUpdate) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Update user fields
+      userToUpdate.name = name || userToUpdate.name;
+      userToUpdate.birthdate = birthdate || userToUpdate.birthdate;
+      userToUpdate.image_url = image ? image.filename : userToUpdate.image_url;
+
+      if (password) {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        userToUpdate.password = hashedPassword;
+      }
+
+      await userToUpdate.save();
+
+      const token = jwt.sign({ userId: userToUpdate.id, email: userToUpdate.email }, process.env.JWT_SECRET);
+      const userDetails = {
+        birthdate: userToUpdate.birthdate,
+        image_url: userToUpdate.image_url,
+        joined: userToUpdate.createdAt,
+      };
+
+      res.status(200).json({ token, user: userDetails });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
+});
+
 
 module.exports = router;

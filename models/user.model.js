@@ -18,7 +18,11 @@ const User = sequelize.define("tbl_user", {
   birthdate: {
     type: DataTypes.DATE,
     allowNull: true
-}
+},
+  image_url: {
+  type: DataTypes.STRING,
+  allowNull: true,
+},
 });
 
 User.sync()
