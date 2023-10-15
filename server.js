@@ -20,6 +20,7 @@ const sequelize = require('./config/db.config');
 
 app.use('/user', userRoutes);
 app.use("/posts", postRoutes);
+app.use('/uploads', express.static('uploads'));
 
 
 app.listen(port, '0.0.0.0', () => {

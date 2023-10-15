@@ -23,20 +23,34 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 
+// Function to decode JWT token and extract user information
+function decodeJwtToken(token) {
+  try {
+    const decoded = jwt.decode(token, { complete: true });
+    const user = decoded.payload;
+    return user;
+  } catch (error) {
+    console.error('Error decoding JWT token:', error);
+    return null;
+  }
+}
+
 const authenticateToken = (req, res, next) => {
   const token = req.header("Authorization");
-  console.log("Token:", token); // Log the token to verify it's being sent
+  console.log("Token:", token);
   if (!token) return res.status(401).json({ error: "Unauthorized" });
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) {
-      console.error("Error verifying token:", err); // Log any errors during token verification
-      return res.status(403).json({ error: "Forbidden" });
-    }
-    req.user = user;
-    next();
-  });
+  // Decoding JWT token and extracting user information
+  const user = decodeJwtToken(token);
+
+  if (!user) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+
+  req.user = user;
+  next();
 };
+
 
 
 router.post("/signup", async (req, res) => {
