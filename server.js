@@ -5,6 +5,7 @@ const mysql = require('mysql');
 const cors = require('cors');
 const userRoutes = require('./routes/user.routes');
 const postRoutes = require('./routes/post.routes');
+const commentRoutes = require('./routes/comment.routes');
 const path = require('path');
 require('dotenv').config();
 require('events').EventEmitter.defaultMaxListeners = 15;
@@ -20,6 +21,7 @@ const sequelize = require('./config/db.config');
 
 app.use('/user', userRoutes);
 app.use("/posts", postRoutes);
+app.use('/comments', commentRoutes);
 app.use('/uploads', express.static('uploads'));
 
 

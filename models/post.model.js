@@ -32,12 +32,11 @@ const Post = sequelize.define("tbl_post", {
   
 });
 
-Post.sync()
-  .then(() => {
-    console.log("Post table created successfully");
-  })
-  .catch((err) => {
-    console.error("Error creating post table:", err);
-  });
+// Post.sync()
+//   .then(() => {
+//   })
+//   .catch((err) => {
+//     console.error("Error creating post table:", err);
+//   });
 
 module.exports = Post;
