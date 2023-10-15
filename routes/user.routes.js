@@ -51,7 +51,45 @@ const authenticateToken = (req, res, next) => {
   next();
 };
 
+// GET all users route
+router.get("/", async (req, res) => {
+  try {
+    // Retrieve all users from the database
+    const users = await User.findAll({
+      attributes: ['id', 'name', 'email', 'birthdate', 'createdAt', 'updatedAt']
+    });
 
+    // Return the list of users
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Error retrieving users:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+// GET user by ID route
+router.get("/:id",  async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    // Retrieve user by ID from the database
+    const user = await User.findByPk(userId, {
+      attributes: ['id', 'name', 'email', 'birthdate', 'createdAt', 'updatedAt'] // Define the attributes you want to retrieve
+    });
+
+    // Check if the user with the given ID exists
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Return the user details
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Error retrieving user by ID:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 router.post("/signup", async (req, res) => {
   try {
@@ -100,7 +138,7 @@ router.post("/signin", async (req, res) => {
     }
   
     // Generate JWT token
-    const token = jwt.sign({ userId: user.id, email: user.email }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET);
     const userDetails = {
       id: user.id,
       name: user.name,
@@ -115,6 +153,7 @@ router.post("/signin", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 // PUT update user profile by token
 router.put("/:token", upload.single("image"), async (req, res) => {
