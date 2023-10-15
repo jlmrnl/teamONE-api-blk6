@@ -12,10 +12,18 @@ const Comment = sequelize.define('tbl_comment', {
   PostID: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    references: {
+      model: Post,
+      key: "post_id",
+    },
   },
   UserID: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    references: {
+      model: User,
+      key: "id",
+    },
   },
   Comment: {
     type: DataTypes.TEXT,
